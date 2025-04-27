@@ -1,4 +1,4 @@
-// DOM Elements
+
 const nameInput = document.getElementById('joinCode');
 const createRoomBtn = document.getElementById('create-room-btn'); 
 const joinRoomBtn = document.getElementById('join-room-btn');     
@@ -33,13 +33,13 @@ const roundResults = document.getElementById('round-results');
 const answerDisplay = document.getElementById('answer-display');
 const leaderboardList = document.getElementById('leaderboard-list');
 const modeOptions = document.querySelectorAll('.mode-option');
-// Additional DOM Elements
+
 const mainGuessInput = document.getElementById('main-guess-input');
 const mainSubmitGuessBtn = document.getElementById('main-submit-guess-btn');
 const guessFeedback = document.getElementById('guess-feedback');
 const chatInput = document.getElementById('chat-input');
 
-// Game state
+
 let name = '';
 let joiningRoom = false;
 let currentRoomCode = null;
@@ -52,13 +52,13 @@ let gameTimer = null;
 let timerStartTime = 0;
 let timerDuration = 0;
 let guessStartTime = 0;
-let selectedGameMode = 'standard'; // Default mode is standard (Emoji Lockdown)
+let selectedGameMode = 'standard'; 
 let currentStoryPrompt = '';
 let storyChainData = [];
 let isStoryCreator = false;
-let currentGamePhase = 'waiting'; // possible values: waiting, emoji-selection, guessing, reveal
+let currentGamePhase = 'waiting'; 
 
-// WebSocket setup
+
 const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const wsURL = `${wsProtocol}//${window.location.host}`; 
 let ws;
@@ -102,7 +102,6 @@ const wrongSound = new Audio('https://assets.mixkit.co/active_storage/sfx/255/25
 const timerSound = new Audio('https://assets.mixkit.co/active_storage/sfx/133/133-preview.mp3');
 const newEmojiSound = new Audio('https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3');
 
-// Initialize connection when page loads
 window.addEventListener('load', () => {
     connectWebSocket();
     setupGameModeSelection();
@@ -123,15 +122,15 @@ async function fetchWeatherData() {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
                     const data = await response.json();
-                    resolve(data); // Resolve the promise with the fetched data
+                    resolve(data); 
                 } catch (error) {
                     console.error('Error fetching weather data:', error);
-                    reject(error); // Reject the promise on error
+                    reject(error); 
                 }
             },
             (error) => {
                 console.error('Error getting location:', error);
-                reject(error); // Reject the promise if geolocation fails
+                reject(error); 
             },
             { enableHighAccuracy: true, timeout: 50000 }
         );
@@ -182,7 +181,7 @@ function connectWebSocket() {
     };
 }
 
-// Handle incoming server messages
+
 async function handleServerMessage(data) {
     switch (data.type) {
         case 'roomCreated':
@@ -217,7 +216,7 @@ async function handleServerMessage(data) {
             isStoryCreator = selectedGameMode === 'story' && data.playerId === playerId;
             showEmojierOrGuesserUI();
             
-            // If you're not the emojier, request the hint immediately
+            
             if (!isEmojier) {
                 sendMessage({
                     type: 'requestHint'
@@ -261,41 +260,41 @@ async function handleServerMessage(data) {
             if (isEmojier) {
                 console.log("Received prompt assignment:", data.prompt);
                 promptWord.textContent = data.prompt;
-                // Make sure the prompt is visible
+                
                 promptWord.style.display = 'block';
                 document.getElementById('prompt-container').style.display = 'block';
-                // Highlight the prompt
+                
                 promptWord.classList.add('highlight-prompt');
             }
             break;
         
         case 'emojiSelected':
-            // Update emoji display when an emoji is selected
+            
             if (data.emojis && data.emojis.length) {
                 selectedEmojis = data.emojis;
                 updateEmojiDisplay();
                 
-                // Play sound for all players except the one who selected it
+                
                 if (data.playerId !== playerId) {
                     newEmojiSound.play();
                 }
                 
-                // Enable guessing as soon as first emoji appears for non-emojiers
+                
                 if (!isEmojier && !guesserSection.style.display === 'block') {
                     guesserSection.style.display = 'block';
                     guessInput.focus();
                     
-                    // Only start the timer once if not already started
+                    
                     if (!gameTimer) {
                         guessStartTime = Date.now();
-                        startTimer(60); // Initial longer timer
+                        startTimer(60); 
                     }
                 }
             }
             break;
             
         case 'emojiSelectionPhase':
-            // Start emoji selection phase
+            
             currentGamePhase = 'emoji-selection';
             roundStatus.textContent = isEmojier ? 'Select your emojis!' : 'Waiting for emojis...';
             if (isEmojier) {
@@ -304,12 +303,12 @@ async function handleServerMessage(data) {
                 updateEmojiDisplay();
             }
             
-            // Start timer for emoji selection
+            
             startTimer(data.timeLimit || 30);
             break;
             
         case 'guessingPhase':
-            // Update emojis and start guessing
+            
             currentGamePhase = 'guessing';
             if (data.emojis && data.emojis.length) {
                 selectedEmojis = data.emojis;
@@ -320,7 +319,7 @@ async function handleServerMessage(data) {
                 updateHint(data.hint);
             }
             
-            // Start guessing phase UI
+            
             handleEmojisLocked({
                 emojis: data.emojis,
                 timeLimitSeconds: data.timeLimit
@@ -332,14 +331,14 @@ async function handleServerMessage(data) {
             break;
             
         case 'correctGuess':
-            // Someone guessed correctly
+            
             correctSound.play();
             updatePlayerList(data.players);
             updateLeaderboard(data.players);
             
             if (data.playerId === playerId) {
                 showSnackbar(`Correct! You earned ${data.scoreEarned} points!`);
-                // Display feedback in the UI
+                
                 displayGuessFeedback(`Correct! You earned ${data.scoreEarned} points!`, true);
                 addChatMessage(`You guessed correctly and earned ${data.scoreEarned} points!`, 'correct-guess');
             } else {
@@ -349,28 +348,28 @@ async function handleServerMessage(data) {
             break;
             
         case 'wrongGuess':
-            // You guessed wrong
+            
             wrongSound.play();
             showSnackbar('Incorrect guess. Try again!');
-            // Display feedback in the UI
+            
             displayGuessFeedback(`"${data.guess}" is incorrect. Try again!`, false);
             addChatMessage(`Wrong guess: "${data.guess}"`, 'wrong-guess');
             break;
             
         case 'playerGuessedWrong':
-            // Someone else guessed wrong
+            
             showSnackbar(`${data.playerName} made an incorrect guess`);
             break;
             
         case 'timeReduced':
-            // First correct guess reduces time
+            
             timerDuration = data.remainingTime * 1000;
             timerStartTime = Date.now();
             showSnackbar('Time reduced! Hurry up with your guess!');
             break;
             
         case 'roundEnd':
-            // End of round
+            
             currentGamePhase = 'reveal';
             stopTimer();
             showRoundResult({
@@ -382,7 +381,7 @@ async function handleServerMessage(data) {
             break;
             
         case 'storyPromptCreated':
-            // New story prompt created
+            
             if (data.prompt && selectedGameMode === 'story') {
                 currentStoryPrompt = data.prompt;
                 if (isEmojier) {
@@ -401,14 +400,14 @@ async function handleServerMessage(data) {
             break;
             
         case 'newRound':
-            // Handle new round messages
+            
             currentRoundDisplay.textContent = data.round;
             totalRoundsDisplay.textContent = data.totalRounds;
             roundStatus.textContent = `Round ${data.round} starting...`;
             isEmojier = data.currentEmojier === playerId;
             isStoryCreator = data.gameMode === 'story' && data.storyCreator === playerId;
             
-            // Add this line to request hint immediately for new rounds
+            
             if (!isEmojier) {
                 sendMessage({
                     type: 'requestHint'
@@ -442,7 +441,7 @@ async function updatePlayerList(players) {
         isEmojier = isHost = isStoryCreator = false;
         score = 0;
       } else {
-        // Now this await really pauses each loop iteration
+        
         try {
             const weatherData = await fetchWeatherData();
             console.log('Weather data:', weatherData);
@@ -488,9 +487,9 @@ function updateLeaderboard(players) {
     leaderboardList.innerHTML = '';
     
     if (players && players.length > 0) {
-        // Create array for sorting with correct handling of string or object values
+        
         const playersForSort = players.map(player => {
-            // If player is a string, convert to object format
+            
             if (typeof player === 'string') {
                 return {
                     displayName: player,
@@ -499,7 +498,7 @@ function updateLeaderboard(players) {
                     isHost: false
                 };
             } else {
-                // Use existing object with proper name fallback
+                
                 return {
                     displayName: player.name || player.name || 'Unknown',
                     score: player.score || 0,
@@ -509,14 +508,14 @@ function updateLeaderboard(players) {
             }
         });
         
-        // Sort by score descending
+        
         const sortedPlayers = playersForSort.sort((a, b) => b.score - a.score);
         
         sortedPlayers.forEach((player, index) => {
             const item = document.createElement('li');
             item.className = 'leaderboard-item';
             
-            // Add medal emoji for top 3 players
+            
             let rankPrefix = '';
             if (index === 0) rankPrefix = '🥇 ';
             else if (index === 1) rankPrefix = '🥈 ';
@@ -535,7 +534,7 @@ function updateLeaderboard(players) {
         leaderboardList.innerHTML = '<li class="leaderboard-item">No players yet</li>';
     }
 }
-// Game UI Functions
+
 function showEntrySection() {
     entrySection.style.display = 'flex';
     gameContainer.style.display = 'none';
@@ -593,20 +592,20 @@ function showGameContainer() {
     gameConfig.style.display = 'none';
 }
 
-// Game Mode Selection
+
 function setupGameModeSelection() {
     modeOptions.forEach(option => {
         option.addEventListener('click', () => {
-            // Remove active class from all options
+            
             modeOptions.forEach(opt => opt.classList.remove('active'));
             
-            // Add active class to selected option
+            
             option.classList.add('active');
             
-            // Update selected game mode
+            
             selectedGameMode = option.dataset.mode;
             
-            // Update server about mode change
+            
             if (isHost) {
                 sendMessage({
                     type: 'setGameMode',
@@ -619,29 +618,29 @@ function setupGameModeSelection() {
     });
 }
 
-// Enhanced emoji picker setup
+
 function setupEmojiPicker() {
-    // Check if we're using the emoji-picker-element or our custom picker
+    
     const useEmojiPickerElement = document.querySelector('emoji-picker') !== null;
     
     if (useEmojiPickerElement) {
-        // Using the emoji-picker-element library
+        
         const emojiPickerElement = document.createElement('emoji-picker');
         emojiPickerElement.classList.add('emoji-picker-element');
         emojiPicker.innerHTML = '';
         emojiPicker.appendChild(emojiPickerElement);
         
-        // Event listener for emoji selection
+        
         emojiPickerElement.addEventListener('emoji-click', event => {
             if (selectedEmojis.length < 5 && (isEmojier || isStoryCreator)) {
                 selectEmoji(event.detail.unicode);
             }
         });
     } else {
-        // Fallback to our custom picker
+        
         emojiPicker.innerHTML = '';
         
-        // Choose emoji set based on game mode
+        
         const emojiSet = selectedGameMode === 'story' 
             ? [...commonEmojis, ...storyEmojis]
             : commonEmojis;
@@ -662,16 +661,16 @@ function selectEmoji(emoji) {
     newEmojiSound.play();
     selectedEmojis.push(emoji);
     
-    // Update UI
+    
     updateEmojiDisplay();
     
-    // Enable lock button after minimum emojis and ensure it's visible
+    
     if (selectedEmojis.length >= 3) {
         lockEmojisBtn.disabled = false;
-        lockEmojisBtn.style.display = 'block'; // Force display
+        lockEmojisBtn.style.display = 'block'; 
     }
     
-    // Send to server
+    
     sendMessage({
         type: 'selectEmoji',
         emoji: emoji,
@@ -679,14 +678,14 @@ function selectEmoji(emoji) {
     });
 }
 function updateEmojiDisplay() {
-    // Clear all slots first
+    
     for (let i = 0; i < 5; i++) {
         const slot = document.getElementById(`emoji-slot-${i}`);
         slot.textContent = '';
         slot.classList.remove('filled');
     }
     
-    // Fill slots with selected emojis
+    
     selectedEmojis.forEach((emoji, index) => {
         if (index < 5) {
             const slot = document.getElementById(`emoji-slot-${index}`);
@@ -701,21 +700,21 @@ function startGame(data) {
     showGameContainer();
     currentGamePhase = 'waiting';
     
-    // Set rounds display
+    
     totalRoundsDisplay.textContent = data.rounds;
     currentRoundDisplay.textContent = data.currentRound;
     
-    // Hide results from previous rounds
+    
     roundResults.style.display = 'none';
     
-    // Reset and hide all sections
+    
     selectedEmojis = [];
     updateEmojiDisplay();
     emojierSection.style.display = 'none';
     guesserSection.style.display = 'none';
     storyModeSection.style.display = 'none';
     
-    // Update UI based on game mode
+    
     if (data.gameMode === 'story') {
         storyModeSection.style.display = 'block';
         storyChain.innerHTML = '';
@@ -727,15 +726,15 @@ function startGame(data) {
 }
 
 function showEmojierOrGuesserUI() {
-    // Reset UI elements
+    
     emojierSection.style.display = 'none';
     guesserSection.style.display = 'none';
     nextPromptContainer.style.display = 'none';
     
-    // For all game modes, ensure the lock button is properly reset
-    lockEmojisBtn.style.display = 'block'; // Make sure button is visible
     
-    // For Story mode
+    lockEmojisBtn.style.display = 'block'; 
+    
+    
     if (selectedGameMode === 'story') {
         if (isStoryCreator) {
             nextPromptContainer.style.display = 'block';
@@ -748,19 +747,19 @@ function showEmojierOrGuesserUI() {
             lockEmojisBtn.disabled = selectedEmojis.length < 3;
         } 
         
-        // Always show the guesser section for non-emojiers, even if they're story creators
+        
         if (!isEmojier) {
             guesserSection.style.display = 'block';
             guessInput.value = '';
             guessInput.focus();
             
-            // Set message to indicate they can guess as emojis appear
+            
             roundStatus.textContent = 'Guess when emojier finishes selecting!';
         }
         return;
     }
     
-    // For standard Emoji Lockdown mode
+    
     if (isEmojier) {
         setupEmojiPicker();
         emojierSection.style.display = 'block';
@@ -771,12 +770,12 @@ function showEmojierOrGuesserUI() {
         guessInput.value = '';
         guessInput.focus();
         
-        // Set message to indicate they can guess as emojis appear
+        
         roundStatus.textContent = 'Guess as emojis appear!';
     }
 }
 
-// Modify setupRound function to properly handle hints
+
 function setupRound(data) {
     currentRoundDisplay.textContent = data.currentRound;
     
@@ -786,24 +785,24 @@ function setupRound(data) {
         promptWord.textContent = data.prompt;
         promptWord.style.display = 'block';
         promptWord.classList.add('highlight-prompt');
-        lockEmojisBtn.disabled = true; // Initially disabled until enough emojis selected
+        lockEmojisBtn.disabled = true; 
         selectedEmojis = [];
         updateEmojiDisplay();
     } else {
-        // Enable guessing UI immediately - don't wait for emojis to be locked
+        
         roundStatus.textContent = `Round ${data.currentRound}: Make your guess as emojis appear`;
         
-        // Instead of clearing the hint, request it from the server
-        // hintDisplay.textContent = '';
         
-        // Request the hint for the new word immediately
+        
+        
+        
         sendMessage({
             type: 'requestHint'
         });
         
-        // Initialize the guess timer right away
+        
         guessStartTime = Date.now();
-        startTimer(data.timeLimitSeconds || 60); // Longer timer since emojier is still picking
+        startTimer(data.timeLimitSeconds || 60); 
     }
     
     if (selectedGameMode === 'story') {
@@ -812,13 +811,13 @@ function setupRound(data) {
 }
 
 function handleEmojisLocked(data) {
-    // Update emoji display for all players
+    
     if (data.emojis && data.emojis.length) {
         selectedEmojis = data.emojis;
         updateEmojiDisplay();
     }
     
-    // Set the game phase to guessing when emojis are locked
+    
     currentGamePhase = 'guessing';
     
     if (isEmojier) {
@@ -827,10 +826,10 @@ function handleEmojisLocked(data) {
     } else {
         roundStatus.textContent = 'Emojis locked! Final guess time...';
         
-        // Restart timer with shorter duration once emojis are locked
+        
         stopTimer();
         startTimer(data.timeLimitSeconds || 30);
-        guessStartTime = Date.now(); // Reset guess time for scoring
+        guessStartTime = Date.now(); 
     }
 }
 
@@ -863,13 +862,13 @@ function showRoundResult(data) {
     updatePlayerList(data.players);
     updateLeaderboard(data.players);
     
-    // Hide gameplay sections
+    
     emojierSection.style.display = 'none';
     guesserSection.style.display = 'none';
     
     roundStatus.textContent = `Round ${data.currentRound} completed`;
     
-    // If story mode, update the story chain
+    
     if (selectedGameMode === 'story' && data.storyChain) {
         updateStoryChain({ storyChain: data.storyChain });
     }
@@ -893,7 +892,7 @@ function endGame(data) {
 function handleStoryPrompt(data) {
     if (selectedGameMode !== 'story') return;
     
-    // Update current prompt
+    
     currentStoryPrompt = data.prompt || '';
     
     if (isStoryCreator) {
@@ -941,11 +940,11 @@ function updateStoryChain(data) {
     }
 }
 
-// Timer Functions
+
 function startTimer(duration) {
     stopTimer();
     timerStartTime = Date.now();
-    timerDuration = duration * 1000; // convert to milliseconds
+    timerDuration = duration * 1000; 
     
     timerBar.style.width = '100%';
     
@@ -956,19 +955,19 @@ function startTimer(duration) {
         
         timerBar.style.width = `${percent}%`;
         
-        // Change color as time runs out
+        
         if (percent < 20) {
             timerBar.style.backgroundColor = 'var(--danger-color)';
         } else if (percent < 50) {
             timerBar.style.backgroundColor = 'var(--warning-color)';
         }
         
-        // Play sound when 10 seconds left
+        
         if (remaining <= 10000 && remaining > 9900) {
             timerSound.play();
         }
         
-        // End timer when reaches 0
+        
         if (remaining <= 0) {
             stopTimer();
             timerBar.style.width = '0%';
@@ -982,11 +981,11 @@ function stopTimer() {
         gameTimer = null;
     }
     
-    // Reset timer bar
+    
     timerBar.style.backgroundColor = 'var(--primary-color)';
 }
 
-// Communication Functions
+
 function sendMessage(data) {
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify(data));
@@ -1005,7 +1004,7 @@ function showSnackbar(message) {
     setTimeout(function(){ errorMessage.className = errorMessage.className.replace("show", ""); }, 3000);
 }
 
-// Event handlers
+
 createRoomBtn.addEventListener('click', () => {
     const name = nameInput.value.trim();
     if (!name) {
@@ -1053,10 +1052,10 @@ startGameBtn.addEventListener('click', () => {
     
     const rounds = parseInt(roundsInput.value) || 5;
     
-    // Ensure currentRoomCode is included in the message
+    
     sendMessage({
         type: 'startGame',
-        roomCode: currentRoomCode, // Add this line
+        roomCode: currentRoomCode, 
         rounds: rounds,
         gameMode: selectedGameMode
     });
@@ -1078,7 +1077,7 @@ submitGuessBtn.addEventListener('click', () => {
     const guess = guessInput.value.trim();
     if (!guess) return;
     
-    const timeToGuess = (Date.now() - guessStartTime) / 1000; // convert to seconds
+    const timeToGuess = (Date.now() - guessStartTime) / 1000; 
     
     sendMessage({
         type: 'submitGuess',
@@ -1122,7 +1121,7 @@ function checkGuessEnter(event) {
     }
 }
 
-// Event listeners for the main guess input
+
 if (mainGuessInput) {
     mainGuessInput.addEventListener('keydown', checkEnterMainGuess);
 }
@@ -1133,7 +1132,7 @@ if (mainSubmitGuessBtn) {
     });
 }
 
-// Function to display feedback for guesses
+
 function displayGuessFeedback(message, isCorrect) {
     if (!guessFeedback) return;
     
@@ -1142,16 +1141,16 @@ function displayGuessFeedback(message, isCorrect) {
         'guess-feedback correct-feedback' : 
         'guess-feedback wrong-feedback';
     
-    // Clear the feedback after 5 seconds
+    
     setTimeout(() => {
         guessFeedback.textContent = '';
         guessFeedback.className = 'guess-feedback';
     }, 5000);
 }
 
-// Modified submit guess function
+
 function submitGuess(guess) {
-    // If no guess is provided, get it from the main input
+    
     if (!guess) {
         guess = guessInput ? guessInput.value.trim() : '';
         if (!guess && mainGuessInput) {
@@ -1161,54 +1160,54 @@ function submitGuess(guess) {
     
     if (!guess || !gameInProgress) return;
     
-    // Check if we're still in emoji selection phase
+    
     if (currentGamePhase === 'emoji-selection' && !isEmojier) {
         showSnackbar('Please wait for the emojier to finish selecting emojis!');
-        // Also provide feedback in the UI
+        
         displayGuessFeedback('Wait for emojier to lock in their emoji selection first!', false);
         
-        // Clear the input field but don't submit
+        
         if (guessInput) guessInput.value = '';
         if (mainGuessInput) mainGuessInput.value = '';
         
-        return; // Don't proceed with guess submission
+        return; 
     }
     
-    // Calculate time taken to guess
-    const timeToGuess = (Date.now() - guessStartTime) / 1000; // convert to seconds
     
-    // Send to server for verification
+    const timeToGuess = (Date.now() - guessStartTime) / 1000; 
+    
+    
     sendMessage({
         type: 'submitGuess',
         guess: guess,
         timeToGuess: timeToGuess
     });
     
-    // Add to chat as a guess attempt
+    
     if (typeof addChatMessage === 'function') {
         addChatMessage(`Guessing: "${guess}"`, 'self-guess');
     }
     
-    // Clear the input field
+    
     if (guessInput) guessInput.value = '';
     if (mainGuessInput) mainGuessInput.value = '';
     
-    // Show temporary feedback that guess was submitted
+    
     displayGuessFeedback('Guess submitted...', null);
 }
 
-// New function for sending chat messages only
+
 function sendChatMessage(message) {
     if (!message) return;
     
-    // Just add to chat, don't submit as a guess
+    
     addChatMessage(message, 'chat-message');
     
-    // In a real chat system, you might want to send this to the server
-    // sendMessage({ type: 'chatMessage', message: message });
+    
+    
 }
 
-// Updated event handler for chat input
+
 function checkEnterChat(event) {
     if (event.key === 'Enter') {
         const message = chatInput.value.trim();
@@ -1219,25 +1218,25 @@ function checkEnterChat(event) {
     }
 }
 
-// Updated event handler for main guess input
+
 function checkEnterMainGuess(event) {
     if (event.key === 'Enter' && mainGuessInput.value.trim() !== '') {
         submitGuess();
     }
 }
 
-// Replacing the existing checkEnterMsg function
+
 function checkEnterMsg(event) {
     if (event.key === 'Enter') {
         const input = event.target;
         const text = input.value.trim();
         
         if (text) {
-            // If this is the main guess input, submit as a guess
+            
             if (input.id === 'main-guess-input' && gameInProgress && !isEmojier) {
                 submitGuess(text);
             } 
-            // Otherwise treat as regular chat
+            
             else if (input.id === 'chat-input') {
                 sendChatMessage(text);
             }
@@ -1246,7 +1245,7 @@ function checkEnterMsg(event) {
     }
 }
 
-// Make these functions available globally
+
 window.checkEnterMsg = checkEnterMsg;
 window.checkEnterChat = checkEnterChat;
 window.checkEnterMainGuess = checkEnterMainGuess;
@@ -1255,7 +1254,7 @@ window.sendChatMessage = sendChatMessage;
 window.addChatMessage = addChatMessage;
 window.revealAnswer = revealAnswer;
 
-// Setup instructions toggle functionality
+
 function setupInstructionsToggle() {
     const toggleButton = document.querySelector('.instruction-toggle');
     if (toggleButton) {
