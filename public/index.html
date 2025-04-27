@@ -17,7 +17,7 @@
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="../static/styles/dist/css/style.css">
+        <link rel="stylesheet" href="style.css">
         <link rel="stylesheet" href="newstyles.css">
     </head>
 <body>
@@ -38,12 +38,8 @@
                     </div>
                     <div class="chat-container">
                         <div class="container" id="chatbox">
-                            <input class="messagebox" placeholder="Enter Answer" onkeydown="checkEnterChat(event)">
-                            <!-- <div style="position: relative; display: inline-block; cursor: pointer;" onclick="startLoading()"> -->
-                                <!-- <button class="send-button" id="send-button"> -->
-                                    <span class="material-symbols-outlined" id="sendIcon">send</span> 
-                                <!-- </button> -->
-                            </div>
+                            <input class="messagebox" id="chat-input" placeholder="Chat with other players..." onkeydown="checkEnterChat(event)">
+                            <span class="material-symbols-outlined" id="sendIcon" onclick="submitGuess(document.getElementById('chat-input').value); document.getElementById('chat-input').value = '';">send</span>
                         </div>
                     </div>
                     <div class='toggle-switch' onclick="myFunction()">
@@ -68,6 +64,59 @@
                     </div>
 
                     <div id="game-config" style="display: none; margin-top: 10px;">
+                        <!-- Game Instructions Panel -->
+                        <div class="game-instructions">
+                            <div class="instructions-header">
+                                <h2>How to Play Signal Emoji</h2>
+                                <div class="pulse-icon">📱</div>
+                            </div>
+                            
+                            <div class="instructions-section">
+                                <h3><span class="instruction-icon">🎮</span> Game Basics</h3>
+                                <ul class="instruction-list">
+                                    <li>Each
+                                         round, one player becomes the <strong>Emojier</strong> 🎮</li>
+                                    <li>The Emojier gets a secret word or phrase to represent</li>
+                                    <li>Using only emojis, the Emojier must help others guess the word</li>
+                                    <li>The faster you guess correctly, the more points you earn!</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="instructions-columns">
+                                <div class="instructions-section">
+                                    <h3><span class="instruction-icon">🔒</span> Signal Emoji Mode</h3>
+                                    <ul class="instruction-list">
+                                        <li>Classic tech command guessing game</li>
+                                        <li>Emojier selects 3-5 emojis to represent a tech command</li>
+                                        <li>Other players type guesses to earn points</li>
+                                        <li>First correct guess gets the most points!</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="instructions-section">
+                                    <h3><span class="instruction-icon">📖</span> Story Mode</h3>
+                                    <ul class="instruction-list">
+                                        <li>Create a collaborative emoji story</li>
+                                        <li>Each round builds on previous guesses</li> 
+                                        <li>One player creates a story prompt</li>
+                                        <li>Chain together emojis and guesses for a fun narrative!</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="instructions-section">
+                                <h3><span class="instruction-icon">👑</span> Host Controls</h3>
+                                <ul class="instruction-list">
+                                    <li>Select a game mode from the options below</li>
+                                    <li>Set number of rounds (1-20)</li>
+                                    <li>Click "Start Game" when all players have joined</li>
+                                    <li>Share the room code with friends to let them join!</li>
+                                </ul>
+                            </div>
+                            
+                            <button class="instruction-toggle">Got it!</button>
+                        </div>
+                        
                         <div class="game-mode-selection">
                             <div class="mode-title">Select Game Mode:</div>
                             <div class="mode-options">
@@ -114,10 +163,11 @@
                     </div>
                     
                     <!-- Emojier Section -->
-                    <div id="emojier-section" style="display: none;">
-                        <div class="prompt-container">
-                            <div class="prompt-title">Your prompt is:</div>
-                            <div class="prompt-word" id="prompt-word"></div>
+                    <div id="emojier-section" class="game-phase">
+                        <h3>You are the Emojier</h3>
+                        <div id="prompt-container">
+                            <p>Your word to represent with emojis is:</p>
+                            <h2 id="prompt-word"></h2>
                         </div>
                         
                         <div class="emoji-picker" id="emoji-picker">
@@ -165,6 +215,15 @@
                             <div class="prompt-word" id="answer-display"></div>
                         </div>
                     </div>
+                    
+                    <!-- <div class="guess-section">
+                        <div class="guess-prompt-title">What's your guess?</div>
+                        <div class="main-guess-container">
+                            <input type="text" id="main-guess-input" class="main-guess-input" placeholder="Enter your guess here..." onkeydown="checkEnterMainGuess(event)">
+                            <button id="main-submit-guess-btn" class="main-guess-button" onclick="submitGuess()">Submit Guess</button>
+                        </div>
+                        <div id="guess-feedback" class="guess-feedback"></div>
+                    </div> -->
                     
                     <!-- Leaderboard -->
                     <div class="leaderboard">

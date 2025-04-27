@@ -50,24 +50,25 @@ const GAME_MODES = {
 // Sample prompts for the standard game mode
 const prompts = [
     // Tech commands
-    "system reboot", "force shutdown", "launch application", "encrypt data",
-    "cloud backup", "factory reset", "password reset", "firewall enable",
-    "download update", "delete file", "optimize system", "troubleshoot network",
-    "run diagnostics", "install driver", "scan for virus", "debug program",
-    "activate protocol", "initiate sequence", "sync devices", "restore settings",
+    "restart computer", "charge battery", "save file", "delete email",
+    "update software", "open website", "search internet", "download app",
+    "print document", "send message", "lock screen", "backup data",
+    "take photo", "share link", "copy paste", "power off",
+    "connect wifi", "mute sound", "charge phone", "scan document",
     
     // Cyber-security terms
-    "data breach", "zero day exploit", "malware attack", "proxy server",
-    "encryption key", "network firewall", "secure socket", "digital signature",
-    "authentication protocol", "ransomware threat", "phishing attempt", "backdoor access",
-    "brute force", "denial of service", "man in the middle", "security patch",
-    "vulnerability scan", "password hash", "trojan horse", "biometric verification",
+    "data backup", "password reset", "secure login", "email virus",
+    "secure payment", "online banking", "digital wallet", "screen lock", 
+    "face unlock", "cloud storage", "data sharing", "virus scan",
+    "email filter", "web browser", "safe mode", "system crash",
+    "security check", "online shopping", "voice search", "browser history",
     
     // Tech phrases
-    "artificial intelligence", "quantum computing", "neural network", "blockchain technology",
-    "virtual reality", "augmented reality", "machine learning", "data mining",
-    "internet of things", "cloud computing", "big data analysis", "facial recognition",
-    "voice assistant", "wireless connectivity", "digital transformation", "autonomous vehicle"
+    "machine learning", "smart home", "virtual meeting", "data science",
+    "phone battery", "video chat", "digital money", "online course",
+    "wireless charging", "voice assistant", "photo editing", "video game",
+    "music streaming", "remote work", "online shopping", "digital camera",
+    "mobile payment", "web design", "video call", "social media"
 ];
 
 // Sample prompts for the story mode
@@ -463,7 +464,6 @@ wss.on('connection', (ws) => {
                         id: playerId,
                         score: 0,
                         isHost: true,
-                        weather:fetchWeather()
                     };
                     
                     newRoom.players.set(ws, playerInfo);
@@ -810,6 +810,22 @@ wss.on('connection', (ws) => {
                         }
                     }
                     break;
+
+                case 'requestHint':
+                    if (currentRoom) {
+                        const room = rooms.get(currentRoom);
+                        if (room && room.currentPrompt) {
+                            // Generate hint for current prompt
+                            const hint = generateHint(room.currentPrompt, room.hintLevel || 0);
+                            
+                            // Send hint only to the requesting player
+                            ws.send(JSON.stringify({
+                                type: 'hintUpdate',
+                                hint: hint
+                            }));
+                        }
+                    }
+                    break;
             }
         } catch (error) {
             console.error('Failed to process message or invalid JSON:', error);
@@ -911,6 +927,16 @@ wss.on('connection', (ws) => {
         }
     });
 });
+
+function generateHint(word, level) {
+    // This function should generate a hint based on the current word
+    // and how much of the hint should be revealed (level)
+    const chars = word.split('');
+    return chars.map((char, i) => {
+        if (char === ' ') return ' ';
+        return level > i ? char : '_';
+    }).join(' ');
+}
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
